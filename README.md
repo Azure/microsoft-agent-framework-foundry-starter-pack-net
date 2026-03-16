@@ -1,57 +1,34 @@
-# Project Name
+# Microsoft Agent Framework and Foundry Starter Pack in .NET
 
-(short, 1-3 sentenced, description of the project)
+This is a starter template to build a .NET-based agentic AI app using [Microsoft Agent Framework](https://aka.ms/agent-framework) and [Microsoft Foundry](https://aka.ms/microsoft-foundry) with [Aspire](https://aspire.dev).
 
 ## Features
 
-This project framework provides the following features:
+![Architecture](./assets/architecture.png)
 
-* Feature 1
-* Feature 2
-* ...
+This stater template provides the following features:
+
+- [Blazor](https://blazor.net) frontend for chat UI
+- [ASP.NET](https://asp.net) backend with Microsoft Agent Framework
+- [Microsoft Foundry Hosted Agents](https://aka.ms/microsoft-foundry/hosted-agents) service for agent hosting
+- [To-do list management MCP server](https://aka.ms/mcp/dotnet/samples/todolist) for tooling support to agent
+- Aspire for cloud-native app orchestration
+
+## Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or higher
+- [Visual Studio 2026](https://visualstudio.microsoft.com/downloads/) or [VS Code](https://code.visualstudio.com/download) + [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit)
+- [Docker Desktop](https://docs.docker.com/desktop/) or equivalent
+- [Azure subscription (free)](http://azure.microsoft.com/free)
 
 ## Getting Started
 
-### Prerequisites
-
-(ideally very short, if any)
-
-- OS
-- Library version
-- ...
-
-### Installation
-
-(ideally very short)
-
-- npm install [package name]
-- mvn install
-- ...
-
-### Quickstart
-(Add steps to get up and running quickly)
-
-1. git clone [repository clone url]
-2. cd [repository name]
-3. ...
-
-
-## Demo
-
-A demo app is included to show how to use the project.
-
-To run the demo, follow these steps:
-
-(Add steps to start up the demo)
-
-1.
-2.
-3.
+TBD
 
 ## Resources
 
-(Any additional resources or related projects)
-
-- Link to supporting information
-- Link to similar sample
-- ...
+- [Microsoft Agent Framework](https://aka.ms/agent-framework)
+- [Microsoft Foundry](https://aka.ms/microsoft-foundry)
+- [Microsoft Foundry Hosted Agents](https://aka.ms/microsoft-foundry/hosted-agents)
+- [Model Context Protocol (MCP)](https://modelcontextprotocol.io)
+- [Aspire](https://aspire.dev)
