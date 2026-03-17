@@ -1,0 +1,30 @@
+name: todo-agent
+
+description: |
+  A hosted agent that manages to-do list items.
+
+metadata:
+  authors:
+    - Justin Yoo
+  tags:
+    - Azure AI AgentServer
+    - Microsoft Agent Framework
+    - Microsoft Foundry Hosted Agents
+    - To-Do List
+
+template:
+  name: todo-agent
+  kind: hosted
+  protocols:
+    - protocol: responses
+      version: v1
+  environment_variables:
+    - name: AZURE_OPENAI_ENDPOINT
+      value: ${AZURE_OPENAI_ENDPOINT}
+    - name: AZURE_OPENAI_DEPLOYMENT_NAME
+      value: "{{chat}}"
+
+resources:
+  - id: gpt-5-mini
+    name: chat
+    kind: model

@@ -1,0 +1,32 @@
+@host = http://localhost:8088
+@endpoint = {{host}}/responses
+
+### Health Check
+GET {{host}}/readiness
+
+### Simple prompt
+POST {{endpoint}}
+Content-Type: application/json
+
+{
+  "input": "Show me the list to do"
+}
+
+### Detailed prompt
+POST {{endpoint}}
+Content-Type: application/json
+
+{
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "What is the Microsoft Agent Framework?"
+        }
+      ]
+    }
+  ]
+}
