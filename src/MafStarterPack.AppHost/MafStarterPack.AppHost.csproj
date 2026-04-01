@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.1.2">
+<Project Sdk="Aspire.AppHost.Sdk/13.2.0">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -10,6 +10,10 @@
 
     <UserSecretsId>a9901e31-0f2d-4b0d-a630-555cb5adaffe</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Foundry" Version="13.*-*" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MafStarterPack.Agent\MafStarterPack.Agent.csproj" />

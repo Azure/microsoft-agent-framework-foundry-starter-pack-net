@@ -1,74 +1,100 @@
-using System.ClientModel;
-using System.ComponentModel;
+using System.Data.Common;
+
+using Azure.AI.Projects;
+using Azure.Identity;
 
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.DevUI;
 using Microsoft.Agents.AI.Hosting;
+using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Azure;
 
 using OpenAI;
 using OpenAI.Chat;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var config = builder.Configuration;
+
+var connection = new DbConnectionStringBuilder() { ConnectionString = config.GetConnectionString("foundry") };
+var endpoint = connection.TryGetValue("Endpoint", out var endpointValue) ? endpointValue?.ToString() : throw new InvalidOperationException("Missing Foundry Endpoint");
+var model = connection.TryGetValue("DeploymentId", out var modelValue) ? modelValue?.ToString() : throw new InvalidOperationException("Missing Foundry Model");
+var agentName = connection.TryGetValue("AgentName", out var agentNameValue) ? agentNameValue?.ToString() : throw new InvalidOperationException("Missing Foundry Agent Name");
+var agentVersion = connection.TryGetValue("AgentVersion", out var agentVersionValue) ? agentVersionValue?.ToString() : "1";
+
+if (builder.Environment.IsDevelopment() == true)
+{
+    var logger = new LoggerFactory().CreateLogger("MafStarterPack.Agent.Program");
+    logger.LogInformation("Using configuration: {config}", config.GetDebugView());
+    logger.LogInformation("Parsed connection string values: Endpoint={endpoint}", endpoint);
+    logger.LogInformation("Parsed connection string values: Model={model}", model);
+    logger.LogInformation("Parsed connection string values: AgentName={agentName}", agentName);
+    logger.LogInformation("Parsed connection string values: AgentVersion={agentVersion}", agentVersion);
+}
+
 builder.AddServiceDefaults();
 
-// You will need to set the token to your own value
-// You can do this using Visual Studio's "Manage User Secrets" UI, or on the command line:
-//   cd this-project-directory
-//   dotnet user-secrets set "GITHUB_TOKEN" "your-github-models-token-here"
-var chatClient = new ChatClient(
-        "gpt-4o-mini",
-        new ApiKeyCredential(builder.Configuration["GITHUB_TOKEN"] ?? throw new InvalidOperationException("Missing configuration: GITHUB_TOKEN")),
-        new OpenAIClientOptions { Endpoint = new Uri("https://models.inference.ai.azure.com") })
-    .AsIChatClient();
+// var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions() { TenantId = config["AZURE_TENANT_ID"] });
+var credential = new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = config["AZURE_TENANT_ID"] });
 
-builder.Services.AddChatClient(chatClient);
+// Foundry Agent Client
+// var projectClient = new AIProjectClient(new Uri(endpoint!), credential);
+// var hostedAgent = await projectClient.Agents.GetAgentAsync(agentName!);
+// var agent = projectClient.AsAIAgent(hostedAgent);
 
-builder.AddAIAgent("writer", "You write short stories (300 words or less) about the specified topic.");
+// builder.Services.AddKeyedSingleton<AIAgent>(agentName!, agent);
 
-builder.AddAIAgent("editor", (sp, key) => new ChatClientAgent(
-    chatClient,
-    name: key,
-    instructions: "You edit short stories to improve grammar and style, ensuring the stories are less than 300 words. Once finished editing, you select a title and format the story for publishing.",
-    tools: [AIFunctionFactory.Create(FormatStory)]
-));
+// Azure OpenAI Client
+// builder.AddAzureOpenAIClient("foundry")
+//        .AddChatClient(model!);
 
-builder.AddWorkflow("publisher", (sp, key) => AgentWorkflowBuilder.BuildSequential(
-    workflowName: key,
-    agents:
-    [
-        sp.GetRequiredKeyedService<AIAgent>("writer"),
-        sp.GetRequiredKeyedService<AIAgent>("editor")
-    ]
-)).AddAsAIAgent("publisher-agent");
+// OpenAI Client
+builder.AddOpenAIClientFromConfiguration("foundry")
+       .AddChatClient(model!);
 
-// Register services for OpenAI responses and conversations (also required for DevUI)
+
+builder.AddAIAgent(agentName!, (sp, key) =>
+{
+    var chatClient = sp.GetRequiredService<IChatClient>();
+    var agent = new ChatClientAgent(
+        chatClient: chatClient,
+        name: key,
+        instructions: """
+            You are a helpful assistant for managing a todo list.
+            You can add, remove, and list tasks in the todo list.
+            Always confirm the user's request before making changes to the todo list.
+            """
+    );
+
+    return agent;
+});
+
 builder.Services.AddOpenAIResponses();
 builder.Services.AddOpenAIConversations();
+
+builder.Services.AddAGUI();
 
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
 
-app.UseHttpsRedirection();
-
-// Map endpoints for OpenAI responses and conversations (also required for DevUI)
 app.MapOpenAIResponses();
 app.MapOpenAIConversations();
 
-if (builder.Environment.IsDevelopment())
+app.MapAGUI(
+    pattern: "ag-ui",
+    aiAgent: app.Services.GetRequiredKeyedService<AIAgent>(agentName!)
+);
+
+if (builder.Environment.IsDevelopment() == true)
 {
-    // Map DevUI endpoint to /devui
     app.MapDevUI();
+}
+else
+{
+    app.UseHttpsRedirection();
 }
 
 app.Run();
-
-[Description("Formats the story for publication, revealing its title.")]
-string FormatStory(string title, string story) => $"""
-    **Title**: {title}
-
-    {story}
-    """;

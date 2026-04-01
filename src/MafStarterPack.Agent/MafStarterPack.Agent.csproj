@@ -7,15 +7,23 @@
     <ImplicitUsings>enable</ImplicitUsings>
 
     <UserSecretsId>a9901e31-0f2d-4b0d-a630-555cb5adaffe</UserSecretsId>
+
+    <NoWarn>$(NoWarn);MEAI001;OPENAI001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Azure.AI.OpenAI" Version="13.*-*" />
+    <PackageReference Include="Azure.Identity" Version="1.*" />
     <PackageReference Include="Microsoft.Agents.AI" Version="1.*-*" />
+    <PackageReference Include="Microsoft.Agents.AI.AzureAI" Version="1.*-*" />
+    <PackageReference Include="Microsoft.Agents.AI.AzureAI.Persistent" Version="1.*-*" />
     <PackageReference Include="Microsoft.Agents.AI.DevUI" Version="1.*-*" />
     <PackageReference Include="Microsoft.Agents.AI.Hosting" Version="1.*-*" />
+    <PackageReference Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="1.*-*" />
     <PackageReference Include="Microsoft.Agents.AI.Hosting.OpenAI" Version="1.*-*" />
     <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.*-*" />
     <PackageReference Include="Microsoft.Agents.AI.Workflows" Version="1.*-*" />
+    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.*" />
   </ItemGroup>
 
   <ItemGroup>
