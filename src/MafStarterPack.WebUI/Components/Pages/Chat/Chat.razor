@@ -51,12 +51,14 @@
         var responseText = new TextContent("");
         currentResponseMessage = new ChatMessage(ChatRole.Assistant, [responseText]);
         currentResponseCancellation = new();
+        StateHasChanged();
         await foreach (var update in ChatClient.GetStreamingResponseAsync(messages.Skip(statefulMessageCount), chatOptions, currentResponseCancellation.Token))
         {
             messages.AddMessages(update, filter: c => c is not TextContent);
             responseText.Text += update.Text;
             chatOptions.ConversationId = update.ConversationId;
             ChatMessageItem.NotifyChanged(currentResponseMessage);
+            StateHasChanged();
         }
 
         // Store the final response in the conversation, and begin getting suggestions

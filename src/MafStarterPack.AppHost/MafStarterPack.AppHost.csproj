@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.Foundry" Version="13.*-*" />
+    <!-- <PackageReference Include="Aspire.Hosting.Foundry" Version="13.*-*" /> -->
   </ItemGroup>
 
   <ItemGroup>

@@ -1,28 +1,23 @@
-using System.Data.Common;
-
+using Azure.AI.Extensions.OpenAI;
 using Azure.AI.Projects;
 using Azure.Identity;
 
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.DevUI;
-using Microsoft.Agents.AI.Hosting;
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Azure;
 
-using OpenAI;
 using OpenAI.Chat;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var config = builder.Configuration;
 
-var connection = new DbConnectionStringBuilder() { ConnectionString = config.GetConnectionString("foundry") };
-var endpoint = connection.TryGetValue("Endpoint", out var endpointValue) ? endpointValue?.ToString() : throw new InvalidOperationException("Missing Foundry Endpoint");
-var model = connection.TryGetValue("DeploymentId", out var modelValue) ? modelValue?.ToString() : throw new InvalidOperationException("Missing Foundry Model");
-var agentName = connection.TryGetValue("AgentName", out var agentNameValue) ? agentNameValue?.ToString() : throw new InvalidOperationException("Missing Foundry Agent Name");
-var agentVersion = connection.TryGetValue("AgentVersion", out var agentVersionValue) ? agentVersionValue?.ToString() : "1";
+var endpoint = config["Foundry:Project:Endpoint"] ?? throw new InvalidOperationException("Missing Foundry Endpoint");
+var model = config["Foundry:Project:Model"] ?? throw new InvalidOperationException("Missing Foundry Model");
+var agentName = config["Foundry:Project:Agent:Name"] ?? "todo-agent";
+var agentVersion = config["Foundry:Project:Agent:Version"] ?? "1";
 
 if (builder.Environment.IsDevelopment() == true)
 {
@@ -36,40 +31,20 @@ if (builder.Environment.IsDevelopment() == true)
 
 builder.AddServiceDefaults();
 
-// var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions() { TenantId = config["AZURE_TENANT_ID"] });
-var credential = new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = config["AZURE_TENANT_ID"] });
+var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions() { TenantId = config["AZURE_TENANT_ID"] });
 
 // Foundry Agent Client
-// var projectClient = new AIProjectClient(new Uri(endpoint!), credential);
-// var hostedAgent = await projectClient.Agents.GetAgentAsync(agentName!);
-// var agent = projectClient.AsAIAgent(hostedAgent);
+// NOTE: projectClient.AsAIAgent() crashes due to Azure.AI.Projects.Agents 2.0.0
+// renaming AgentRecord → ProjectsAgentRecord, while Microsoft.Agents.AI.AzureAI
+// 1.0.0-rc5 still references the old type name in GetService().
+// Workaround: use clientFactory to wrap the inner client and intercept GetService.
+var projectClient = new AIProjectClient(endpoint: new Uri(endpoint), tokenProvider: credential);
+var agentReference = new AgentReference(agentName, agentVersion);
+var agent = projectClient.AsAIAgent(
+    agentReference: agentReference,
+    clientFactory: inner => new AgentRecordShimChatClient(inner));
 
-// builder.Services.AddKeyedSingleton<AIAgent>(agentName!, agent);
-
-// Azure OpenAI Client
-// builder.AddAzureOpenAIClient("foundry")
-//        .AddChatClient(model!);
-
-// OpenAI Client
-builder.AddOpenAIClientFromConfiguration("foundry")
-       .AddChatClient(model!);
-
-
-builder.AddAIAgent(agentName!, (sp, key) =>
-{
-    var chatClient = sp.GetRequiredService<IChatClient>();
-    var agent = new ChatClientAgent(
-        chatClient: chatClient,
-        name: key,
-        instructions: """
-            You are a helpful assistant for managing a todo list.
-            You can add, remove, and list tasks in the todo list.
-            Always confirm the user's request before making changes to the todo list.
-            """
-    );
-
-    return agent;
-});
+builder.Services.AddKeyedSingleton<AIAgent>(agentName, agent);
 
 builder.Services.AddOpenAIResponses();
 builder.Services.AddOpenAIConversations();
@@ -85,7 +60,7 @@ app.MapOpenAIConversations();
 
 app.MapAGUI(
     pattern: "ag-ui",
-    aiAgent: app.Services.GetRequiredKeyedService<AIAgent>(agentName!)
+    aiAgent: app.Services.GetRequiredKeyedService<AIAgent>(agentName)
 );
 
 if (builder.Environment.IsDevelopment() == true)
@@ -98,3 +73,22 @@ else
 }
 
 app.Run();
+
+/// <summary>
+/// Wraps an IChatClient to intercept GetService calls that would trigger loading
+/// the missing AgentRecord type, preventing a TypeLoadException.
+/// </summary>
+internal sealed class AgentRecordShimChatClient(IChatClient inner) : DelegatingChatClient(inner)
+{
+    public override object? GetService(Type serviceType, object? serviceKey = null)
+    {
+        try
+        {
+            return base.GetService(serviceType, serviceKey);
+        }
+        catch (TypeLoadException)
+        {
+            return null;
+        }
+    }
+}
