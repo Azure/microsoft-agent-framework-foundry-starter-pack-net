@@ -16,14 +16,20 @@ This stater template provides the following features:
 
 ## Prerequisites
 
+- [Azure subscription (free)](http://azure.microsoft.com/free)
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or higher
 - [Visual Studio 2026](https://visualstudio.microsoft.com/downloads/) or [VS Code](https://code.visualstudio.com/download) + [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit)
 - [Docker Desktop](https://docs.docker.com/desktop/) or equivalent
 - [Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd)
 - [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli)
-- [Azure subscription (free)](http://azure.microsoft.com/free)
+- [Aspire CLI](https://aspire.dev/get-started/install-cli/)
 
 ## Quickstart
+
+This starter pack has a two-step deployment process.
+
+1. Deploy agent to Microsoft Foundry.
+1. Deploy apps via Aspire.
 
 ### Get repository root
 
@@ -53,7 +59,7 @@ This stater template provides the following features:
     az login
     ```
 
-### Deploy Microsoft Foundry Hosted Agents
+### Deploy Microsoft Foundry Prompt Agent
 
 1. Navigate to the `resources-foundry` directory.
 
@@ -61,27 +67,16 @@ This stater template provides the following features:
     cd $REPOSITORY_ROOT/resources-foundry
     ```
 
-1. Initialize resources on Azure.
-
-    ```bash
-    azd init
-    ```
-
-   When you get a prompt, enter the environment name.
-
-1. Initialize hosted agent on Microsoft Foundry.
-
-    ```bash
-    azd ai agent init -m $REPOSITORY_ROOT/src/MafStarterPack.HostedAgent/agent.yaml --no-prompt
-    ```
-
-1. Deploy the hosted agent to Microsoft Foundry.
+1. Deploy a prompt agent to Microsoft Foundry.
 
     ```bash
     azd up
     ```
 
-   > **NOTE**: You may have to set the environment variable, `AZURE_TENANT_ID`.
+   While provisioning, you might be asked to enter environment name, Azure subscription and location.
+
+   > [!NOTE]
+   > You may have to set the environment variable, `AZURE_TENANT_ID`.
    >
    > ```bash
    > # bash/zsh
@@ -95,51 +90,38 @@ This stater template provides the following features:
 
 ### Deploy apps to Azure
 
-TBD
-
-### Run agent locally
-
-1. Add Microsoft Foundry endpoint.
+1. Make sure you're at the repository root.
 
     ```bash
-    dotnet user-secrets --project $REPOSITORY_ROOT/src/MafStarterPack.HostedAgent set AZURE_OPENAI_ENDPOINT $(azd env get-value AZURE_OPENAI_ENDPOINT)
-    dotnet user-secrets --project $REPOSITORY_ROOT/src/MafStarterPack.HostedAgent set AZURE_OPENAI_DEPLOYMENT_NAME gpt-5-mini
+    cd $REPOSITORY_ROOT
     ```
 
-1. Run the agent app.
+1. Deploy the app.
 
     ```bash
-    dotnet run --project $REPOSITORY_ROOT/src/MafStarterPack.HostedAgent
+    azd up
     ```
 
-1. Send test prompts.
+   While provisioning, you might be asked to enter environment name, Azure subscription and location.
+
+### Run apps locally
+
+1. Make sure you're at the repository root.
 
     ```bash
-    # health check
-    curl http://localhost:8088/readiness
+    cd $REPOSITORY_ROOT
     ```
+
+1. Run Aspire.
 
     ```bash
-    # simple prompt
-    curl -X POST http://localhost:8088/responses -H "Content-Type: application/json" -d '{"input": "show me the list to do"}'
+    aspire run --project ./src/MafStarterPack.AppHost
     ```
-
-   > **NOTE**: You may have to set the environment variable, `AZURE_TENANT_ID`.
-   >
-   > ```bash
-   > # bash/zsh
-   > AZURE_TENANT_ID=$(az account show --query "tenantId" -o tsv)
-   > ```
-   >
-   > ```bash
-   > # PowerShell
-   > $env:AZURE_TENANT_ID = az account show --query "tenantId" -o tsv
-   > ```
 
 ## Resources
 
 - [Microsoft Agent Framework](https://aka.ms/agent-framework)
 - [Microsoft Foundry](https://aka.ms/microsoft-foundry)
-- [Microsoft Foundry Hosted Agents](https://aka.ms/microsoft-foundry/hosted-agents)
+- [Microsoft Foundry Agent Service](https://aka.ms/microsoft-foundry/agent-service)
 - [Model Context Protocol (MCP)](https://modelcontextprotocol.io)
 - [Aspire](https://aspire.dev)

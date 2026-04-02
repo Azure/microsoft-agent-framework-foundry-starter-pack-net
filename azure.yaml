@@ -1,16 +1,17 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 
-name: microsoft-foundry-prompt-agent-net
+name: microsoft-agent-framework-foundry-starter-pack-net
 
 metadata:
-  template: microsoft-foundry-prompt-agent-net@1.0.0
+  template: microsoft-agent-framework-foundry-starter-pack-net@1.0.0
   author: Justin Yoo
-  description: Provision Microsoft Foundry Agent and MCP server using Azure Developer CLI
+  description: Provision Microsoft Agent Framework starter pack apps using Azure Developer CLI
 
-services:
-  mcp-todo:
+services:  
+  app:
+    project: ./src/MafStarterPack.AppHost/MafStarterPack.AppHost.csproj
     host: containerapp
-    image: ghcr.io/microsoft/mcp-dotnet-samples/todo-list:latest
+    language: dotnet
 
 hooks:
   postdeploy:

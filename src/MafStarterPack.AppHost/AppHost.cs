@@ -4,18 +4,8 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 var foundry = builder.AddFoundry("foundry");
 
-// var sqlite = builder.AddSqlite("sqlite", databaseFileName: "todo.db")
-//                     .WithSqliteWeb();
-
-// var mcpTodo = builder.AddProject<Projects.MafStarterPack_McpTodo>("mcp-todo")
-//                      .WithExternalHttpEndpoints()
-//                      .WithReference(sqlite)
-//                      .WaitFor(sqlite);
-
 var agent = builder.AddProject<MafStarterPack_Agent>("agent")
                    .WithExternalHttpEndpoints()
-                //    .WithReference(mcpTodo)
-                //    .WaitFor(mcpTodo)
                    .WithReference(foundry);
 
 var webUI = builder.AddProject<MafStarterPack_WebUI>("webui")
@@ -70,7 +60,8 @@ internal static class FoundryResourceExtensions
             AgentVersion = section["Agent:Version"],
         };
 
-        var resourceBuilder = builder.AddResource(resource);
+        var resourceBuilder = builder.AddResource(resource)
+                                     .ExcludeFromManifest();
         resourceBuilder.OnInitializeResource((res, e, ct) =>
         {
             var missing = res.GetMissingConfigKeys();

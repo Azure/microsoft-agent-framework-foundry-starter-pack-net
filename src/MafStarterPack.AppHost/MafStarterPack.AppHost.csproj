@@ -12,14 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- <PackageReference Include="Aspire.Hosting.Foundry" Version="13.*-*" /> -->
-    <!-- <PackageReference Include="CommunityToolkit.Aspire.Hosting.SQLite" Version="13.*" /> -->
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\MafStarterPack.Agent\MafStarterPack.Agent.csproj" />
-    <ProjectReference Include="..\MafStarterPack.HostedAgent\MafStarterPack.HostedAgent.csproj" />
-    <!-- <ProjectReference Include="..\MafStarterPack.McpTodo\MafStarterPack.McpTodo.csproj" /> -->
     <ProjectReference Include="..\MafStarterPack.WebUI\MafStarterPack.WebUI.csproj" />
   </ItemGroup>
 
