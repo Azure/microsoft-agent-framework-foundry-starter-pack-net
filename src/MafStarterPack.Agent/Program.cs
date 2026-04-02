@@ -8,6 +8,9 @@ using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Extensions.AI;
 
+using ModelContextProtocol.Client;
+using ModelContextProtocol.Protocol;
+
 using OpenAI.Chat;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,18 +34,56 @@ if (builder.Environment.IsDevelopment() == true)
 
 builder.AddServiceDefaults();
 
-var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions() { TenantId = config["AZURE_TENANT_ID"] });
+builder.Services.AddHttpClient("mcp-todo", client =>
+{
+    client.BaseAddress = new Uri("https+http://mcp-todo");
+});
+
+builder.Services.AddKeyedSingleton<McpClient>("mcp-todo", (sp, obj) =>
+{
+    var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+    var httpClient = sp.GetRequiredService<IHttpClientFactory>()
+                       .CreateClient("mcp-todo");
+    var endpoint = builder.Environment.IsDevelopment() == true
+                 ? $"{httpClient.BaseAddress!.ToString().Replace("https+", string.Empty).TrimEnd('/')}"
+                 : $"{httpClient.BaseAddress!.ToString().Replace("+http", string.Empty).TrimEnd('/')}";
+
+    var clientTransportOptions = new HttpClientTransportOptions()
+    {
+        Endpoint = new Uri($"{endpoint}/mcp")
+    };
+    var clientTransport = new HttpClientTransport(clientTransportOptions, httpClient, loggerFactory);
+
+    var clientOptions = new McpClientOptions()
+    {
+        ClientInfo = new Implementation()
+        {
+            Name = "MCP To-do Client",
+            Version = "1.0.0",
+        }
+    };
+
+    return McpClient.CreateAsync(clientTransport, clientOptions, loggerFactory).GetAwaiter().GetResult();
+});
 
 // Foundry Agent Client
 // NOTE: projectClient.AsAIAgent() crashes due to Azure.AI.Projects.Agents 2.0.0
 // renaming AgentRecord → ProjectsAgentRecord, while Microsoft.Agents.AI.AzureAI
 // 1.0.0-rc5 still references the old type name in GetService().
 // Workaround: use clientFactory to wrap the inner client and intercept GetService.
+var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions() { TenantId = config["AZURE_TENANT_ID"] });
 var projectClient = new AIProjectClient(endpoint: new Uri(endpoint), tokenProvider: credential);
 var agentReference = new AgentReference(agentName, agentVersion);
+
+var mcpClient = builder.Services
+                       .BuildServiceProvider()
+                       .GetRequiredKeyedService<McpClient>("mcp-todo");
+var mcpTools = await mcpClient.ListToolsAsync();
+
 var agent = projectClient.AsAIAgent(
     agentReference: agentReference,
-    clientFactory: inner => new AgentRecordShimChatClient(inner));
+    clientFactory: inner => new AgentRecordShimChatClient(inner),
+    tools: [.. mcpTools]);
 
 builder.Services.AddKeyedSingleton<AIAgent>(agentName, agent);
 

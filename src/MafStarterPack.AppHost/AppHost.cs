@@ -4,11 +4,18 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 var foundry = builder.AddFoundry("foundry");
 
+var mcpTodo = builder.AddContainer("mcp-todo", "ghcr.io/microsoft/mcp-dotnet-samples/todo-list", "latest")
+                     .WithExternalHttpEndpoints()
+                     .WithHttpEndpoint(8080, 8080)
+                     .WithArgs("--http");
+
 var agent = builder.AddProject<MafStarterPack_Agent>("agent")
                    .WithExternalHttpEndpoints()
-                   .WithReference(foundry);
+                   .WithReference(foundry)
+                   .WithReference(mcpTodo.GetEndpoint("http"))
+                   .WaitFor(mcpTodo);
 
-var webui = builder.AddProject<MafStarterPack_WebUI>("webui")
+var webUI = builder.AddProject<MafStarterPack_WebUI>("webui")
                    .WithExternalHttpEndpoints()
                    .WithReference(agent)
                    .WaitFor(agent);

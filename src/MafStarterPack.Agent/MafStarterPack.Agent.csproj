@@ -8,7 +8,7 @@
 
     <UserSecretsId>a9901e31-0f2d-4b0d-a630-555cb5adaffe</UserSecretsId>
 
-    <NoWarn>$(NoWarn);MEAI001;OPENAI001</NoWarn>
+    <NoWarn>$(NoWarn);ASP0000;MEAI001;OPENAI001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
