@@ -7,13 +7,23 @@ metadata:
   author: Justin Yoo
   description: Minimal Microsoft Foundry project with gpt-5-mini deployment using Azure Developer CLI
 
+services:
+  mcp-todo:
+    project: ../src/MafStarterPack.McpTodo
+    host: containerapp
+    language: dotnet
+    docker:
+      path: ./Dockerfile
+      context: .
+      remoteBuild: true
+
 hooks:
-  postprovision:
+  postdeploy:
     posix:
       shell: sh
-      run: ./scripts/post-provision.sh
+      run: ./scripts/post-deploy.sh
       interactive: false
     windows:
       shell: pwsh
-      run: ./scripts/post-provision.ps1
+      run: ./scripts/post-deploy.ps1
       interactive: false

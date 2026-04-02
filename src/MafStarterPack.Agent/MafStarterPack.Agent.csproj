@@ -23,7 +23,6 @@
     <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.*-*" />
     <PackageReference Include="Microsoft.Agents.AI.Workflows" Version="1.*-*" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.*" />
-    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.*" />
   </ItemGroup>
 
   <ItemGroup>

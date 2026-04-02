@@ -3,6 +3,7 @@
     <Project Path="src/MafStarterPack.Agent/MafStarterPack.Agent.csproj" />
     <Project Path="src/MafStarterPack.AppHost/MafStarterPack.AppHost.csproj" />
     <Project Path="src/MafStarterPack.HostedAgent/MafStarterPack.HostedAgent.csproj" />
+    <Project Path="src/MafStarterPack.McpTodo/MafStarterPack.McpTodo.csproj" />
     <Project Path="src/MafStarterPack.ServiceDefaults/MafStarterPack.ServiceDefaults.csproj" />
     <Project Path="src/MafStarterPack.WebUI/MafStarterPack.WebUI.csproj" />
   </Folder>

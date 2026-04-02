@@ -4,16 +4,19 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 var foundry = builder.AddFoundry("foundry");
 
-var mcpTodo = builder.AddContainer("mcp-todo", "ghcr.io/microsoft/mcp-dotnet-samples/todo-list", "latest")
-                     .WithExternalHttpEndpoints()
-                     .WithHttpEndpoint(8080, 8080)
-                     .WithArgs("--http");
+// var sqlite = builder.AddSqlite("sqlite", databaseFileName: "todo.db")
+//                     .WithSqliteWeb();
+
+// var mcpTodo = builder.AddProject<Projects.MafStarterPack_McpTodo>("mcp-todo")
+//                      .WithExternalHttpEndpoints()
+//                      .WithReference(sqlite)
+//                      .WaitFor(sqlite);
 
 var agent = builder.AddProject<MafStarterPack_Agent>("agent")
                    .WithExternalHttpEndpoints()
-                   .WithReference(foundry)
-                   .WithReference(mcpTodo.GetEndpoint("http"))
-                   .WaitFor(mcpTodo);
+                //    .WithReference(mcpTodo)
+                //    .WaitFor(mcpTodo)
+                   .WithReference(foundry);
 
 var webUI = builder.AddProject<MafStarterPack_WebUI>("webui")
                    .WithExternalHttpEndpoints()

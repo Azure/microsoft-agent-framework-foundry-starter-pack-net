@@ -46,6 +46,8 @@ param location string
 @description('Username of the person deploying the resources, for tagging purposes')
 param username string = ''
 
+param mcpTodoExists bool
+
 @description('Id of the user or app to assign application roles')
 param principalId string
 
@@ -98,6 +100,7 @@ module resources 'resources.bicep' = {
     environmentName: environmentName
     location: location
     tags: tags
+    mcpTodoExists: mcpTodoExists
     principalId: principalId
     principalType: principalType
     sku: sku
@@ -111,7 +114,12 @@ module resources 'resources.bicep' = {
 
 // Outputs that azd expects
 output AZURE_TENANT_ID string = subscription().tenantId
-output FOUNDRY_LOCATION string = location
+
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = resources.outputs.AZURE_CONTAINER_REGISTRY_ENDPOINT
+output AZURE_RESOURCE_MCP_TODO_ID string = resources.outputs.AZURE_RESOURCE_MCP_TODO_ID
+output AZURE_RESOURCE_MCP_TODO_NAME string = resources.outputs.AZURE_RESOURCE_MCP_TODO_NAME
+output AZURE_RESOURCE_MCP_TODO_FQDN string = resources.outputs.AZURE_RESOURCE_MCP_TODO_FQDN
+
 output FOUNDRY_NAME string = resources.outputs.FOUNDRY_NAME
 output FOUNDRY_RESOURCE_ID string = resources.outputs.FOUNDRY_RESOURCE_ID
 output FOUNDRY_ENDPOINT string = resources.outputs.FOUNDRY_ENDPOINT

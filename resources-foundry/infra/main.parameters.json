@@ -8,6 +8,9 @@
     "location": {
       "value": "${AZURE_LOCATION}"
     },
+    "mcpTodoExists": {
+      "value": "${SERVICE_MCP_TODO_RESOURCE_EXISTS=false}"
+    },
     "username": {
       "value": "${AZURE_USERNAME}"
     },
