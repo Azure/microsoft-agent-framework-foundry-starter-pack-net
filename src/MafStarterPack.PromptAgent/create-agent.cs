@@ -42,7 +42,6 @@ var definition = ProjectsAgentDefinition.CreatePromptAgentDefinition(model)
                                         .AddInstruction("""
                                             You are a helpful assistant for managing a todo list.
                                             You can add, remove, and list tasks in the todo list.
-                                            Always confirm the user's request before making changes to the todo list.
                                             """)
                                         .AddTools(tools);
 

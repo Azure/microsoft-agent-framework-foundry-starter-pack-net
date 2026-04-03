@@ -2,6 +2,8 @@
 
 This is a starter template to build a .NET-based agentic AI app using [Microsoft Agent Framework](https://aka.ms/agent-framework) and [Microsoft Foundry](https://aka.ms/microsoft-foundry) with [Aspire](https://aspire.dev).
 
+![Intro video](./assets/intro.webp)
+
 ## Features
 
 ![Architecture](./assets/architecture.png)
