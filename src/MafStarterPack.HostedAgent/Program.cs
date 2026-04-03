@@ -23,7 +23,7 @@ Console.WriteLine($"Using Azure Tenant ID: {config["AZURE_TENANT_ID"]}");
 var endpoint = config["AZURE_OPENAI_ENDPOINT"] ?? throw new InvalidOperationException("AZURE_OPENAI_ENDPOINT is not set");
 var deploymentName = config["AZURE_OPENAI_DEPLOYMENT_NAME"] ?? "gpt-5-mini";
 
-var host = builder.Build();
+var app = builder.Build();
 
 TokenCredential credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions() { TenantId = config["AZURE_TENANT_ID"] });
 
@@ -33,7 +33,7 @@ var chatClient = new AzureOpenAIClient(new Uri($"{endpoint.TrimEnd('/')}/openai/
                      .AsBuilder()
                      .UseLogging()
                      .UseOpenTelemetry(sourceName: "Agents")
-                     .Build(host.Services);
+                     .Build(app.Services);
 
 var agent = new ChatClientAgent(
                     chatClient: chatClient,

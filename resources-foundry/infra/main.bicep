@@ -1,25 +1,18 @@
 targetScope = 'subscription'
-// targetScope = 'resourceGroup'
 
+@description('Environment name for tagging')
 @minLength(1)
 @maxLength(64)
-@description('Name of the environment that can be used as part of naming resource convention')
 param environmentName string
 
-@minLength(1)
-@maxLength(90)
-@description('Name of the resource group to use or create')
-param resourceGroupName string = 'rg-${environmentName}'
-
-// Restricted locations to match list from
-// https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/responses?tabs=python-key#region-availability
-@minLength(1)
 @description('Primary location for all resources')
 @allowed([
+  // Regions where gpt-5-mini is available,
+  // see https://learn.microsoft.com/azure/ai-foundry/foundry-models/concepts/models-sold-directly-by-azure?view=foundry&tabs=global-standard-aoai%2Cstandard-chat-completions%2Cglobal-standard&pivots=azure-openai#global-standard-model-availability
   'australiaeast'
   'brazilsouth'
-  'canadacentral'
   'canadaeast'
+  'centralus'
   'eastus'
   'eastus2'
   'francecentral'
@@ -39,13 +32,21 @@ param resourceGroupName string = 'rg-${environmentName}'
   'switzerlandnorth'
   'uaenorth'
   'uksouth'
+  'westeurope'
   'westus'
-  'westus2'
   'westus3'
 ])
+@metadata({
+  azd: {
+    type: 'location'
+  }
+})
 param location string
 
-param aiDeploymentsLocation string
+@description('Username of the person deploying the resources, for tagging purposes')
+param username string = ''
+
+param mcpTodoExists bool
 
 @description('Id of the user or app to assign application roles')
 param principalId string
@@ -53,136 +54,76 @@ param principalId string
 @description('Principal type of user or app')
 param principalType string
 
-@description('Optional. Name of an existing AI Services account within the resource group. If not provided, a new one will be created.')
-param aiFoundryResourceName string = ''
+@description('The SKU for the Azure OpenAI resource')
+@allowed(['S0'])
+param sku string = 'S0'
 
-@description('Optional. Name of the AI Foundry project. If not provided, a default name will be used.')
-param aiFoundryProjectName string = 'ai-project-${environmentName}'
+@description('Disallow key-based authentication for the Azure OpenAI resource. Should be disabled in production environments in favor of managed identities')
+param disableLocalAuth bool = false
 
-@description('List of model deployments')
-param aiProjectDeploymentsJson string = '[]'
+@description('Deploy GPT model automatically')
+param deployGptModel bool = true
 
-@description('List of connections')
-param aiProjectConnectionsJson string = '[]'
+@description('GPT model to deploy')
+param gptModelName string = 'gpt-5-mini'
 
-@description('List of resources to create and connect to the AI project')
-param aiProjectDependentResourcesJson string = '[]'
+@description('GPT model version')
+param gptModelVersion string = '2025-08-07'
 
-var aiProjectDeployments = json(aiProjectDeploymentsJson)
-var aiProjectConnections = json(aiProjectConnectionsJson)
-var aiProjectDependentResources = json(aiProjectDependentResourcesJson)
-
-@description('Enable hosted agent deployment')
-param enableHostedAgents bool
-
-@description('Enable monitoring for the AI project')
-param enableMonitoring bool = true
-
-@description('Optional. Existing container registry resource ID. If provided, no new ACR will be created and a connection to this ACR will be established.')
-param existingContainerRegistryResourceId string = ''
-
-@description('Optional. Existing container registry endpoint (login server). Required if existingContainerRegistryResourceId is provided.')
-param existingContainerRegistryEndpoint string = ''
-
-@description('Optional. Name of an existing ACR connection on the Foundry project. If provided, no new ACR or connection will be created.')
-param existingAcrConnectionName string = ''
-
-@description('Optional. Existing Application Insights connection string. If provided, a connection will be created but no new App Insights resource.')
-param existingApplicationInsightsConnectionString string = ''
-
-@description('Optional. Existing Application Insights resource ID. Used for connection metadata when providing an existing App Insights.')
-param existingApplicationInsightsResourceId string = ''
-
-@description('Optional. Name of an existing Application Insights connection on the Foundry project. If provided, no new App Insights or connection will be created.')
-param existingAppInsightsConnectionName string = ''
+@description('GPT deployment capacity')
+param gptCapacity int = 100
 
 // Tags that should be applied to all resources.
 // 
 // Note that 'azd-service-name' tags should be applied separately to service host resources.
 // Example usage:
 //   tags: union(tags, { 'azd-service-name': <service name in azure.yaml> })
-var tags = {
+var tags = username == '' ? {
   'azd-env-name': environmentName
+} : {
+  'azd-env-name': environmentName
+  'azd-username': username
 }
 
-// Check if resource group exists and create it if it doesn't
-resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: resourceGroupName
+// Organize resources in a resource group
+resource rg 'Microsoft.Resources/resourceGroups@2025-04-01' = {
+  name: 'rg-${environmentName}'
   location: location
   tags: tags
 }
 
-// Build dependent resources array conditionally
-// Check if ACR already exists in the user-provided array to avoid duplicates
-// Also skip if user provided an existing container registry endpoint or connection name
-var hasAcr = contains(map(aiProjectDependentResources, r => r.resource), 'registry')
-var shouldCreateAcr = enableHostedAgents && !hasAcr && empty(existingContainerRegistryResourceId) && empty(existingAcrConnectionName)
-var dependentResources = shouldCreateAcr ? union(aiProjectDependentResources, [
-  {
-    resource: 'registry'
-    connectionName: 'acr-connection'
-  }
-]) : aiProjectDependentResources
-
-// AI Project module
-module aiProject 'core/ai/ai-project.bicep' = {
+// Deploy the Azure OpenAI resource
+module resources 'resources.bicep' = {
   scope: rg
-  name: 'ai-project'
+  name: 'resources'
   params: {
+    environmentName: environmentName
+    location: location
     tags: tags
-    location: aiDeploymentsLocation
-    aiFoundryProjectName: aiFoundryProjectName
+    mcpTodoExists: mcpTodoExists
     principalId: principalId
     principalType: principalType
-    existingAiAccountName: aiFoundryResourceName
-    deployments: aiProjectDeployments
-    connections: aiProjectConnections
-    additionalDependentResources: dependentResources
-    enableMonitoring: enableMonitoring
-    enableHostedAgents: enableHostedAgents
-    existingContainerRegistryResourceId: existingContainerRegistryResourceId
-    existingContainerRegistryEndpoint: existingContainerRegistryEndpoint
-    existingAcrConnectionName: existingAcrConnectionName
-    existingApplicationInsightsConnectionString: existingApplicationInsightsConnectionString
-    existingApplicationInsightsResourceId: existingApplicationInsightsResourceId
-    existingAppInsightsConnectionName: existingAppInsightsConnectionName
+    sku: sku
+    disableLocalAuth: disableLocalAuth
+    deployGptModel: deployGptModel
+    gptModelName: gptModelName
+    gptModelVersion: gptModelVersion
+    gptCapacity: gptCapacity
   }
 }
 
-// Resources
-output AZURE_RESOURCE_GROUP string = resourceGroupName
-output AZURE_AI_ACCOUNT_ID string = aiProject.outputs.accountId
-output AZURE_AI_PROJECT_ID string = aiProject.outputs.projectId
-output AZURE_AI_FOUNDRY_PROJECT_ID string = aiProject.outputs.projectId
-output AZURE_AI_ACCOUNT_NAME string = aiProject.outputs.aiServicesAccountName
-output AZURE_AI_PROJECT_NAME string = aiProject.outputs.projectName
+// Outputs that azd expects
+output AZURE_TENANT_ID string = subscription().tenantId
 
-// Endpoints
-output AZURE_AI_PROJECT_ENDPOINT string = aiProject.outputs.AZURE_AI_PROJECT_ENDPOINT
-output AZURE_OPENAI_ENDPOINT string = aiProject.outputs.AZURE_OPENAI_ENDPOINT
-output APPLICATIONINSIGHTS_CONNECTION_STRING string = aiProject.outputs.APPLICATIONINSIGHTS_CONNECTION_STRING
-output APPLICATIONINSIGHTS_RESOURCE_ID string = aiProject.outputs.APPLICATIONINSIGHTS_RESOURCE_ID
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = resources.outputs.AZURE_CONTAINER_REGISTRY_ENDPOINT
+output AZURE_RESOURCE_MCP_TODO_ID string = resources.outputs.AZURE_RESOURCE_MCP_TODO_ID
+output AZURE_RESOURCE_MCP_TODO_NAME string = resources.outputs.AZURE_RESOURCE_MCP_TODO_NAME
+output AZURE_RESOURCE_MCP_TODO_FQDN string = resources.outputs.AZURE_RESOURCE_MCP_TODO_FQDN
 
-// Dependent Resources and Connections
-
-// ACR
-output AZURE_AI_PROJECT_ACR_CONNECTION_NAME string = aiProject.outputs.dependentResources.registry.connectionName
-output AZURE_CONTAINER_REGISTRY_ENDPOINT string = aiProject.outputs.dependentResources.registry.loginServer
-
-// Bing Search
-output BING_GROUNDING_CONNECTION_NAME  string = aiProject.outputs.dependentResources.bing_grounding.connectionName
-output BING_GROUNDING_RESOURCE_NAME string = aiProject.outputs.dependentResources.bing_grounding.name
-output BING_GROUNDING_CONNECTION_ID string = aiProject.outputs.dependentResources.bing_grounding.connectionId
-
-// Bing Custom Search
-output BING_CUSTOM_GROUNDING_CONNECTION_NAME string = aiProject.outputs.dependentResources.bing_custom_grounding.connectionName
-output BING_CUSTOM_GROUNDING_NAME string = aiProject.outputs.dependentResources.bing_custom_grounding.name
-output BING_CUSTOM_GROUNDING_CONNECTION_ID string = aiProject.outputs.dependentResources.bing_custom_grounding.connectionId
-
-// Azure AI Search
-output AZURE_AI_SEARCH_CONNECTION_NAME string = aiProject.outputs.dependentResources.search.connectionName
-output AZURE_AI_SEARCH_SERVICE_NAME string = aiProject.outputs.dependentResources.search.serviceName
-
-// Azure Storage
-output AZURE_STORAGE_CONNECTION_NAME string = aiProject.outputs.dependentResources.storage.connectionName
-output AZURE_STORAGE_ACCOUNT_NAME string = aiProject.outputs.dependentResources.storage.accountName
+output FOUNDRY_NAME string = resources.outputs.FOUNDRY_NAME
+output FOUNDRY_RESOURCE_ID string = resources.outputs.FOUNDRY_RESOURCE_ID
+output FOUNDRY_ENDPOINT string = resources.outputs.FOUNDRY_ENDPOINT
+output FOUNDRY_OPENAI_ENDPOINT string = resources.outputs.FOUNDRY_OPENAI_ENDPOINT
+output FOUNDRY_PROJECT_NAME string = resources.outputs.FOUNDRY_PROJECT_NAME
+output FOUNDRY_PROJECT_ENDPOINT string = resources.outputs.FOUNDRY_PROJECT_ENDPOINT
+output FOUNDRY_MODEL_DEPLOYMENT_NAME string = resources.outputs.FOUNDRY_MODEL_DEPLOYMENT_NAME

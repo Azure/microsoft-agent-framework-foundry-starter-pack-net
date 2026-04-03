@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: microsoft-agent-framework-foundry-starter-pack-net
+
+metadata:
+  template: microsoft-agent-framework-foundry-starter-pack-net@1.0.0
+  author: Justin Yoo
+  description: Provision Microsoft Agent Framework starter pack apps using Azure Developer CLI
+
+services:  
+  app:
+    project: ./src/MafStarterPack.AppHost/MafStarterPack.AppHost.csproj
+    host: containerapp
+    language: dotnet
+
+hooks:
+  postdeploy:
+    posix:
+      shell: sh
+      run: ./scripts/post-deploy.sh
+      interactive: false
+    windows:
+      shell: pwsh
+      run: ./scripts/post-deploy.ps1
+      interactive: false
