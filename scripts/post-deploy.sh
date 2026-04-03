@@ -2,15 +2,14 @@
 
 REPOSITORY_ROOT=$(git rev-parse --show-toplevel)
 
-declare -A secrets
-while IFS=' = ' read -r key value; do
-    secrets["$key"]="$value"
-done < <(dotnet user-secrets \
-    --project "$REPOSITORY_ROOT/src/MafStarterPack.AppHost/MafStarterPack.AppHost.csproj" list)
+secrets="$REPOSITORY_ROOT/src/MafStarterPack.AppHost/MafStarterPack.AppHost.csproj"
 
-foundryName="${secrets["FOUNDRY_NAME"]}"
-foundryProjectName="${secrets["FOUNDRY_PROJECT_NAME"]}"
-foundryResourceGroup="${secrets["FOUNDRY_RESOURCE_GROUP"]}"
+foundryName=$(dotnet user-secrets --project "$secrets" list \
+    | grep '^FOUNDRY_NAME ' | sed 's/^FOUNDRY_NAME = //')
+foundryProjectName=$(dotnet user-secrets --project "$secrets" list \
+    | grep '^FOUNDRY_PROJECT_NAME ' | sed 's/^FOUNDRY_PROJECT_NAME = //')
+foundryResourceGroup=$(dotnet user-secrets --project "$secrets" list \
+    | grep '^FOUNDRY_RESOURCE_GROUP ' | sed 's/^FOUNDRY_RESOURCE_GROUP = //')
 
 userAssignedIdentityName=$(azd env get-value MANAGED_IDENTITY_NAME)
 resourceGroup="rg-$(azd env get-value AZURE_ENV_NAME)"
