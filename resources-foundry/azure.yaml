@@ -9,8 +9,13 @@ metadata:
 
 services:
   mcp-todo:
+    project: ../src/MafStarterPack.McpTodo
     host: containerapp
-    image: ghcr.io/microsoft/mcp-dotnet-samples/todo-list:latest
+    language: dotnet
+    docker:
+      path: ./Dockerfile
+      context: .
+      remoteBuild: true
 
 hooks:
   postdeploy:

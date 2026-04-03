@@ -18,8 +18,4 @@
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.3.*" />
   </ItemGroup>
 
-  <!-- <ItemGroup>
-    <ProjectReference Include="..\MafStarterPack.ServiceDefaults\MafStarterPack.ServiceDefaults.csproj" />
-  </ItemGroup> -->
-
 </Project>

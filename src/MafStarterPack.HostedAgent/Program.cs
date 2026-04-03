@@ -10,8 +10,6 @@ using Microsoft.Extensions.Hosting;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-// builder.AddServiceDefaults();
-
 var config = builder.Configuration
                     .AddEnvironmentVariables()
                     .AddUserSecrets<Program>(optional: true, reloadOnChange: true)
@@ -26,8 +24,6 @@ var endpoint = config["AZURE_OPENAI_ENDPOINT"] ?? throw new InvalidOperationExce
 var deploymentName = config["AZURE_OPENAI_DEPLOYMENT_NAME"] ?? "gpt-5-mini";
 
 var app = builder.Build();
-
-// app.MapDefaultEndpoints();
 
 TokenCredential credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions() { TenantId = config["AZURE_TENANT_ID"] });
 
