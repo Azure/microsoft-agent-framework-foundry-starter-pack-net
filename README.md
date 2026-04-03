@@ -9,10 +9,10 @@ This is a starter template to build a .NET-based agentic AI app using [Microsoft
 This stater template provides the following features:
 
 - [Blazor](https://blazor.net) frontend for chat UI
-- [ASP.NET](https://asp.net) backend with Microsoft Agent Framework
-- [Microsoft Foundry Hosted Agents](https://aka.ms/microsoft-foundry/hosted-agents) service for agent hosting
+- [ASP.NET](https://asp.net) backend with [Microsoft Agent Framework](https://aka.ms/agent-framework)
+- [Microsoft Foundry Agent Service](https://aka.ms/microsoft-foundry/agent-service) for agent hosting
 - [To-do list management MCP server](https://aka.ms/mcp/dotnet/samples/todolist) for tooling support to agent
-- Aspire for cloud-native app orchestration
+- [Aspire](https://aspire.dev) for cloud-native app orchestration
 
 ## Prerequisites
 
@@ -26,7 +26,7 @@ This stater template provides the following features:
 
 ## Quickstart
 
-This starter pack has a two-step deployment process.
+This starter pack has a two-step deployment process, which mimicks the real-world scenario. Agents and apps are usually deployed separately.
 
 1. Deploy agent to Microsoft Foundry.
 1. Deploy apps via Aspire.
@@ -59,7 +59,7 @@ This starter pack has a two-step deployment process.
     az login
     ```
 
-### Deploy Microsoft Foundry Prompt Agent
+### Deploy Microsoft Foundry Agent Service
 
 1. Navigate to the `resources-foundry` directory.
 
