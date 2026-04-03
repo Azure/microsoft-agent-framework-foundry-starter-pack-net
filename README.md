@@ -75,7 +75,7 @@ This starter pack has a two-step deployment process.
 
    While provisioning, you might be asked to enter environment name, Azure subscription and location.
 
-   > [!NOTE]
+   > [!TIP]
    > You may have to set the environment variable, `AZURE_TENANT_ID`.
    >
    > ```bash
