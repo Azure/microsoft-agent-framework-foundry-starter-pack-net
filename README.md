@@ -4,6 +4,12 @@ This is a starter template to build a .NET-based agentic AI app using [Microsoft
 
 ![Intro video](./assets/intro.webp)
 
+## What is this starter pack for?
+
+Building AI agents is getting easier. Deploying them as part of a real application, with multiple services, persistent state, and production infrastructure, is where things get complicated. But where should we start building architecture to deploy them onto the cloud in a cloud-native way?
+
+This starter pack is where you should start from. It's an opinionated way to build an AI agent system using [Microsoft Agent Framework](https://aka.ms/agent-framework) and [Microsoft Foundry](https://aka.ms/microsoft-foundry) with [Aspire](https://aspire.dev). If you're unsure where to start, this starter pack will guide you walk through.
+
 ## Features
 
 ![Architecture](./assets/architecture.png)
