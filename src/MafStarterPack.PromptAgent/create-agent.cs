@@ -1,9 +1,11 @@
 #!/usr/bin/env dotnet
 
 #:sdk Microsoft.NET.Sdk
-#:package Azure.AI.Projects@2.*
-#:package Azure.Identity@1.*
-#:package Microsoft.Extensions.Hosting@10.*
+
+#:package Azure.AI.Projects
+#:package Azure.Identity
+#:package Microsoft.Extensions.Hosting
+
 #:property UserSecretsId=a9901e31-0f2d-4b0d-a630-555cb5adaffe
 
 #pragma warning disable OPENAI001
