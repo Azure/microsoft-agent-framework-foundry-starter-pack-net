@@ -196,6 +196,9 @@ module acrForExistingProject 'core/host/acr.bicep' = if (shouldCreateAcrForExist
 }
 
 // Resources
+output AZURE_TENANT_ID string = subscription().tenantId
+output AZURE_AI_MODEL_DEPLOYMENT_NAME string = aiProjectDeployments[0].name
+
 output AZURE_RESOURCE_GROUP string = resourceGroupName
 output AZURE_AI_ACCOUNT_ID string = useExistingAiProject ? existingAiProject.outputs.accountId : aiProject.outputs.accountId
 output AZURE_AI_PROJECT_ID string = useExistingAiProject ? existingAiProject.outputs.projectId : aiProject.outputs.projectId

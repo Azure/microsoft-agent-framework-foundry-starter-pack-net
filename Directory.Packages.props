@@ -6,13 +6,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageVersion Include="Azure.AI.AgentServer.AgentFramework" Version="1.*-*" />
-    <PackageVersion Include="Azure.AI.Projects" Version="2.*" />
+    <PackageVersion Include="Azure.AI.Projects" Version="2.*-*" />
     <PackageVersion Include="Azure.Identity" Version="1.*" />
     <PackageVersion Include="Microsoft.Agents.AI" Version="1.*" />
     <PackageVersion Include="Microsoft.Agents.AI.AGUI" Version="1.*-*" />
     <PackageVersion Include="Microsoft.Agents.AI.AzureAI" Version="1.*-*" />
     <PackageVersion Include="Microsoft.Agents.AI.DevUI" Version="1.*-*" />
+    <PackageVersion Include="Microsoft.Agents.AI.Foundry.Hosting" Version="1.*-*" />
     <PackageVersion Include="Microsoft.Agents.AI.Hosting" Version="1.*-*" />
     <PackageVersion Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="1.*-*" />
     <PackageVersion Include="Microsoft.Agents.AI.Hosting.OpenAI" Version="1.*-*" />
@@ -25,6 +25,7 @@
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.*" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="10.*" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="1.*" />
+    <PackageVersion Include="OpenTelemetry.Api" Version="1.*" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.*" />
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.*" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.*" />
