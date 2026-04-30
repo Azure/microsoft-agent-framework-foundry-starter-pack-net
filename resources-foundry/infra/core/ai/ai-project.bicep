@@ -25,6 +25,10 @@ param existingAiAccountName string = ''
 @description('List of connections to provision')
 param connections array = []
 
+@secure()
+@description('Map of connection name to credentials object. Kept as @secure to prevent secrets from appearing in deployment logs. Example: { "my-conn": { "key": "secret" } }')
+param connectionCredentials object = {}
+
 @description('Also provision dependent resources and connect to the project')
 param additionalDependentResources dependentResourcesType
 
@@ -33,6 +37,9 @@ param enableMonitoring bool = true
 
 @description('Enable hosted agent deployment')
 param enableHostedAgents bool = false
+
+@description('Enable the capability host for agent conversations. When false and hosted agents are enabled, the capability host is not created (v2 hosted agents handle storage automatically).')
+param enableCapabilityHost bool = true
 
 @description('Optional. Existing container registry resource ID. If provided, a connection will be created to this ACR instead of creating a new one.')
 param existingContainerRegistryResourceId string = ''
@@ -91,7 +98,8 @@ module applicationInsights '../monitor/applicationinsights.bicep' = if (shouldCr
     location: location
     tags: tags
     name: 'appi-${resourceToken}'
-    logAnalyticsWorkspaceId: logAnalytics!.outputs.id
+    logAnalyticsWorkspaceId: logAnalytics.outputs.id
+    projectMIPrincipalId: aiAccount::project.identity.principalId
   }
 }
 
@@ -146,7 +154,7 @@ resource aiAccount 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
     ]
   }
 
-  resource aiFoundryAccountCapabilityHost 'capabilityHosts@2025-10-01-preview' = if (enableHostedAgents) {
+  resource aiFoundryAccountCapabilityHost 'capabilityHosts@2025-10-01-preview' = if (enableHostedAgents && enableCapabilityHost) {
     name: 'agents'
     properties: {
       capabilityHostKind: 'Agents'
@@ -158,40 +166,27 @@ resource aiAccount 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
 }
 
 
-// Create connection towards appinsights - only if we created a new App Insights resource
-resource appInsightConnection 'Microsoft.CognitiveServices/accounts/projects/connections@2025-04-01-preview' = if (shouldCreateAppInsights) {
-  parent: aiAccount::project
-  name: 'appi-connection'
-  properties: {
-    category: 'AppInsights'
-    target: applicationInsights!.outputs.id
-    authType: 'ApiKey'
-    isSharedToAll: true
-    credentials: {
-      key: applicationInsights!.outputs.connectionString
-    }
-    metadata: {
-      ApiType: 'Azure'
-      ResourceId: applicationInsights!.outputs.id
-    }
-  }
-}
+// Create connection towards appinsights:
+// - when we create a new App Insights resource, OR
+// - when the user provided an existing App Insights connection string + resource ID but no existing connection name
+// Both cases are merged into a single resource to avoid duplicate ARM resource definitions (which fail deployment).
+var shouldCreateExistingAppInsightsConnection = enableMonitoring && hasExistingAppInsightsConnectionString && !hasExistingAppInsightsConnection && !empty(existingApplicationInsightsResourceId)
+var shouldCreateAppInsightsConnection = shouldCreateAppInsights || shouldCreateExistingAppInsightsConnection
 
-// Create connection to existing App Insights - if user provided connection string but no existing connection
-resource existingAppInsightConnection 'Microsoft.CognitiveServices/accounts/projects/connections@2025-04-01-preview' = if (enableMonitoring && hasExistingAppInsightsConnectionString && !hasExistingAppInsightsConnection && !empty(existingApplicationInsightsResourceId)) {
+resource appInsightConnection 'Microsoft.CognitiveServices/accounts/projects/connections@2025-04-01-preview' = if (shouldCreateAppInsightsConnection) {
   parent: aiAccount::project
-  name: 'appi-connection'
+  name: 'appi-${resourceToken}'
   properties: {
     category: 'AppInsights'
-    target: existingApplicationInsightsResourceId
+    target: shouldCreateAppInsights ? applicationInsights.outputs.id : existingApplicationInsightsResourceId
     authType: 'ApiKey'
     isSharedToAll: true
     credentials: {
-      key: existingApplicationInsightsConnectionString
+      key: shouldCreateAppInsights ? applicationInsights.outputs.connectionString : existingApplicationInsightsConnectionString
     }
     metadata: {
       ApiType: 'Azure'
-      ResourceId: existingApplicationInsightsResourceId
+      ResourceId: shouldCreateAppInsights ? applicationInsights.outputs.id : existingApplicationInsightsResourceId
     }
   }
 }
@@ -202,63 +197,20 @@ module aiConnections './connection.bicep' = [for (connection, index) in connecti
   params: {
     aiServicesAccountName: aiAccount.name
     aiProjectName: aiAccount::project.name
-    connectionConfig: {
-      name: connection.name
-      category: connection.category
-      target: connection.target
-      authType: connection.authType
-    }
-    apiKey: '' // API keys should be provided via secure parameters or Key Vault
+    connectionConfig: connection
+    credentials: connectionCredentials[?connection.name] ?? {}
   }
 }]
 
-resource localUserAiDeveloperRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: resourceGroup()
-  name: guid(subscription().id, resourceGroup().id, principalId, '64702f94-c441-49e6-a78b-ef80e0188fee')
+// Azure AI User for the developer, scoped to the Foundry Project.
+// Project scope is sufficient for creating/running agents and calling models via the project endpoint.
+resource localUserAzureAIUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: aiAccount::project
+  name: guid(subscription().id, resourceGroup().id, principalId, '53ca6127-db72-4b80-b1b0-d745d6d5456d')
   properties: {
     principalId: principalId
     principalType: principalType
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '64702f94-c441-49e6-a78b-ef80e0188fee')
-  }
-}
-
-resource localUserCognitiveServicesUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: resourceGroup()
-  name: guid(subscription().id, resourceGroup().id, principalId, 'a97b65f3-24c7-4388-baec-2e87135dc908')
-  properties: {
-    principalId: principalId
-    principalType: principalType
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', 'a97b65f3-24c7-4388-baec-2e87135dc908')
-  }
-}
-
-resource localUserCognitiveServicesOpenAIUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: resourceGroup()
-  name: guid(subscription().id, resourceGroup().id, principalId, '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')
-  properties: {
-    principalId: principalId
-    principalType: principalType
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')
-  }
-}
-
-resource projectCognitiveServicesUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: aiAccount
-  name: guid(subscription().id, resourceGroup().id, aiAccount::project.name, '53ca6127-db72-4b80-b1b0-d745d6d5456d')
-  properties: {
-    principalId: aiAccount::project.identity.principalId
-    principalType: 'ServicePrincipal'
     roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '53ca6127-db72-4b80-b1b0-d745d6d5456d')
-  }
-}
-
-resource projectCognitiveServicesOpenAIUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: aiAccount
-  name: guid(subscription().id, resourceGroup().id, aiAccount::project.name, '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')
-  properties: {
-    principalId: aiAccount::project.identity.principalId
-    principalType: 'ServicePrincipal'
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')
   }
 }
 
@@ -303,18 +255,18 @@ module existingAcrConnection './connection.bicep' = if (hasExistingAcr && !hasEx
     aiServicesAccountName: aiAccount.name
     aiProjectName: aiAccount::project.name
     connectionConfig: {
-      name: 'acr-connection'
+      name: 'acr-${resourceToken}'
       category: 'ContainerRegistry'
       target: existingContainerRegistryEndpoint
       authType: 'ManagedIdentity'
-      credentials: {
-        clientId: aiAccount::project.identity.principalId
-        resourceId: existingContainerRegistryResourceId
-      }
       isSharedToAll: true
       metadata: {
         ResourceId: existingContainerRegistryResourceId
       }
+    }
+    credentials: {
+      clientId: aiAccount::project.identity.principalId
+      resourceId: existingContainerRegistryResourceId
     }
   }
 }
@@ -390,15 +342,21 @@ output aiServicesAccountName string = aiAccount.name
 output aiServicesProjectName string = aiAccount::project.name
 output aiServicesPrincipalId string = aiAccount.identity.principalId
 output projectName string = aiAccount::project.name
-output APPLICATIONINSIGHTS_CONNECTION_STRING string = shouldCreateAppInsights ? applicationInsights!.outputs.connectionString : (hasExistingAppInsightsConnectionString ? existingApplicationInsightsConnectionString : '')
-output APPLICATIONINSIGHTS_RESOURCE_ID string = shouldCreateAppInsights ? applicationInsights!.outputs.id : (hasExistingAppInsightsConnectionString ? existingApplicationInsightsResourceId : '')
+output APPLICATIONINSIGHTS_CONNECTION_STRING string = shouldCreateAppInsights ? applicationInsights.outputs.connectionString : (hasExistingAppInsightsConnectionString ? existingApplicationInsightsConnectionString : '')
+output APPLICATIONINSIGHTS_RESOURCE_ID string = shouldCreateAppInsights ? applicationInsights.outputs.id : (hasExistingAppInsightsConnectionString ? existingApplicationInsightsResourceId : '')
+
+// Connection outputs from the connections array
+output connectionIds array = [for (connection, index) in (connections ?? []): {
+  name: aiConnections[index].outputs.connectionName
+  id: aiConnections[index].outputs.connectionId
+}]
 
 // Grouped dependent resources outputs
 output dependentResources object = {
   registry: {
     name: hasAcrConnection ? acr!.outputs.containerRegistryName : ''
     loginServer: hasAcrConnection ? acr!.outputs.containerRegistryLoginServer : ((hasExistingAcr || hasExistingAcrConnection) ? existingContainerRegistryEndpoint : '')
-    connectionName: hasAcrConnection ? acr!.outputs.containerRegistryConnectionName : (hasExistingAcrConnection ? existingAcrConnectionName : (hasExistingAcr ? 'acr-connection' : ''))
+    connectionName: hasAcrConnection ? acr!.outputs.containerRegistryConnectionName : (hasExistingAcrConnection ? existingAcrConnectionName : (hasExistingAcr ? 'acr-${resourceToken}' : ''))
   }
   bing_grounding: {
     name: (hasBingConnection) ? bingGrounding!.outputs.bingGroundingName : ''

@@ -32,6 +32,9 @@
       "aiProjectConnectionsJson": {
         "value": "${AI_PROJECT_CONNECTIONS=[]}"
       },
+      "aiProjectConnectionCredentialsJson": {
+        "value": "${AI_PROJECT_CONNECTION_CREDENTIALS}"
+      },
       "aiProjectDependentResourcesJson": {
         "value": "${AI_PROJECT_DEPENDENT_RESOURCES=[]}"
       },
@@ -40,6 +43,12 @@
       },
       "enableHostedAgents": {
         "value": "${ENABLE_HOSTED_AGENTS=false}"
+      },
+      "enableCapabilityHost": {
+        "value": "${ENABLE_CAPABILITY_HOST=true}"
+      },
+      "useExistingAiProject": {
+        "value": "${USE_EXISTING_AI_PROJECT=false}"
       },
       "existingContainerRegistryResourceId": {
         "value": "${AZURE_CONTAINER_REGISTRY_RESOURCE_ID=}"

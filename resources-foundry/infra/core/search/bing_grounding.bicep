@@ -13,7 +13,7 @@ param aiServicesAccountName string = ''
 param aiProjectName string = ''
 
 @description('Name for the AI Foundry Bing Search connection')
-param connectionName string = 'bing-grounding-connection'
+param connectionName string
 
 // Get reference to the AI Services account and project to access their managed identities
 resource aiAccount 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing = if (!empty(aiServicesAccountName) && !empty(aiProjectName)) {
@@ -68,7 +68,9 @@ module bingSearchConnection '../ai/connection.bicep' = if (!empty(aiServicesAcco
         type: 'bing_grounding'
       }
     }
-    apiKey: bingSearch.listKeys().key1
+    credentials: {
+      key: bingSearch.listKeys().key1
+    }
   }
   dependsOn: [
     bingSearchRoleAssignment
@@ -76,6 +78,6 @@ module bingSearchConnection '../ai/connection.bicep' = if (!empty(aiServicesAcco
 }
 
 output bingGroundingName string = bingSearch.name
-output bingGroundingConnectionName string = !empty(aiServicesAccountName) && !empty(aiProjectName) ? bingSearchConnection!.outputs.connectionName : ''
+output bingGroundingConnectionName string = bingSearchConnection.outputs.connectionName
 output bingGroundingResourceId string = bingSearch.id
-output bingGroundingConnectionId string = !empty(aiServicesAccountName) && !empty(aiProjectName) ? bingSearchConnection!.outputs.connectionId : ''
+output bingGroundingConnectionId string = bingSearchConnection.outputs.connectionId

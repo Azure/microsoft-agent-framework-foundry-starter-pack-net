@@ -22,7 +22,7 @@ param aiServicesAccountName string = ''
 param aiProjectName string = ''
 
 @description('Name for the AI Foundry storage connection')
-param connectionName string = 'storage-connection'
+param connectionName string
 
 // Storage Account for the AI Services account
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
@@ -110,4 +110,4 @@ module storageConnection '../ai/connection.bicep' = if (!empty(aiServicesAccount
 output storageAccountName string = storageAccount.name
 output storageAccountId string = storageAccount.id
 output storageAccountPrincipalId string = storageAccount.identity.principalId
-output storageConnectionName string = !empty(aiServicesAccountName) && !empty(aiProjectName) ? storageConnection!.outputs.connectionName : ''
+output storageConnectionName string = storageConnection.outputs.connectionName
