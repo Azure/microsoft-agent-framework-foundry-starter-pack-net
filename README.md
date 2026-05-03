@@ -18,7 +18,7 @@ This stater template provides the following features:
 
 - [Blazor](https://blazor.net) frontend for chat UI
 - [ASP.NET](https://asp.net) backend with [Microsoft Agent Framework](https://aka.ms/agent-framework)
-- [Microsoft Foundry Agent Service](https://aka.ms/microsoft-foundry/agent-service) for agent hosting
+- [Microsoft Foundry Hosted Agents](https://aka.ms/microsoft-foundry/hosted-agents) for agent hosting
 - [To-do list management MCP server](https://aka.ms/mcp/dotnet/samples/todolist) for tooling support to agent
 - [Aspire](https://aspire.dev) for cloud-native app orchestration
 
@@ -34,9 +34,10 @@ This stater template provides the following features:
 
 ## Quickstart
 
-This starter pack has a two-step deployment process, which mimicks the real-world scenario. Agents and apps are usually deployed separately.
+This starter pack has a three-step deployment process, which mimicks the real-world scenario. MCP servers, agents and apps are usually deployed separately.
 
-1. Deploy agent to Microsoft Foundry.
+1. Deploy an MCP server.
+1. Deploy a hosted agent to Microsoft Foundry.
 1. Deploy apps via Aspire.
 
 ### Get repository root
@@ -67,7 +68,35 @@ This starter pack has a two-step deployment process, which mimicks the real-worl
     az login
     ```
 
-### Deploy Microsoft Foundry Agent Service
+### Deploy To-do MCP server
+
+1. Navigate to the `resources-mcp` directory.
+
+    ```bash
+    cd $REPOSITORY_ROOT/resources-mcp
+    ```
+
+1. Deploy a To-do MCP server.
+
+    ```bash
+    azd up
+    ```
+
+   While provisioning, you might be asked to enter environment name, Azure subscription and location.
+
+   > **NOTE**: You may have to set the environment variable, `AZURE_TENANT_ID`.
+   >
+   > ```bash
+   > # bash/zsh
+   > AZURE_TENANT_ID=$(az account show --query "tenantId" -o tsv)
+   > ```
+   >
+   > ```bash
+   > # PowerShell
+   > $env:AZURE_TENANT_ID = az account show --query "tenantId" -o tsv
+   > ```
+
+### Deploy Microsoft Foundry Hosted Agents
 
 1. Navigate to the `resources-foundry` directory.
 
@@ -75,7 +104,7 @@ This starter pack has a two-step deployment process, which mimicks the real-worl
     cd $REPOSITORY_ROOT/resources-foundry
     ```
 
-1. Deploy a prompt agent to Microsoft Foundry.
+1. Deploy a hosted agent to Microsoft Foundry.
 
     ```bash
     azd up
@@ -129,6 +158,6 @@ This starter pack has a two-step deployment process, which mimicks the real-worl
 
 - [Microsoft Agent Framework](https://aka.ms/agent-framework)
 - [Microsoft Foundry](https://aka.ms/microsoft-foundry)
-- [Microsoft Foundry Agent Service](https://aka.ms/microsoft-foundry/agent-service)
+- [Microsoft Foundry Hosted Agents](https://aka.ms/microsoft-foundry/hosted-agents)
 - [Model Context Protocol (MCP)](https://modelcontextprotocol.io)
 - [Aspire](https://aspire.dev)
