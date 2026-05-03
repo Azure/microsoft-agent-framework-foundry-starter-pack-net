@@ -50,14 +50,14 @@ internal static class FoundryResourceExtensions
 {
     internal static IResourceBuilder<FoundryResource> AddFoundry(this IDistributedApplicationBuilder builder, string name)
     {
-        var section = builder.Configuration.GetSection("Foundry:Project");
+        var config = builder.Configuration;
 
         var resource = new FoundryResource(name)
         {
-            ProjectEndpoint = section["Endpoint"],
-            Model = section["Model"],
-            AgentName = section["Agent:Name"],
-            AgentVersion = section["Agent:Version"],
+            ProjectEndpoint = config["FOUNDRY_PROJECT_ENDPOINT"],
+            Model = config["FOUNDRY_MODEL_DEPLOYMENT_NAME"],
+            AgentName = config["TODO_AGENT_NAME"],
+            AgentVersion = config["TODO_AGENT_VERSION"],
         };
 
         var resourceBuilder = builder.AddResource(resource)

@@ -12,7 +12,7 @@ $foundryModelDeploymentName = azd env get-value AZURE_AI_MODEL_DEPLOYMENT_NAME
 
 $todoAgentName = azd env get-value AGENT_TODO_AGENT_NAME
 $todoAgentVersion = azd env get-value AGENT_TODO_AGENT_VERSION
-$todoAgentEndpoint = azd env get-value AGENT_TODO_AGENT_ENDPOINT
+$todoAgentEndpoint = azd env get-value AGENT_TODO_AGENT_RESPONSES_ENDPOINT
 
 dotnet user-secrets --project "$REPOSITORY_ROOT/src/MafStarterPack.AppHost" set "AZURE_TENANT_ID" $tenantId
 

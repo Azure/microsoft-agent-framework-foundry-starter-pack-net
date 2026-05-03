@@ -4,10 +4,10 @@ requiredVersions:
   extensions:
     azure.ai.agents: '>=0.1.0-preview'
 
-name: microsoft-agent-framework-starter
+name: microsoft-foundry-hosted-todo-agent
 
 metadata:
-  template: microsoft-agent-framework-starter@1.0.0
+  template: microsoft-foundry-hosted-todo-agent@1.0.0
   author: Justin Yoo
   description: Provision Microsoft Foundry Hosted Agent using Azure Developer CLI
 
