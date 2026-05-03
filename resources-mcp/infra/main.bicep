@@ -38,7 +38,7 @@ resource rg 'Microsoft.Resources/resourceGroups@2025-04-01' = {
   tags: tags
 }
 
-// Deploy the Azure OpenAI resource
+// Deploy the MCP Todo infrastructure resources
 module resources 'resources.bicep' = {
   scope: rg
   name: 'resources'
