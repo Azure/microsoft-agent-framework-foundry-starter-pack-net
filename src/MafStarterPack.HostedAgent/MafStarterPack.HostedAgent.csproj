@@ -10,8 +10,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.AI.AgentServer.AgentFramework" />
+    <PackageReference Include="Azure.AI.Projects" />
+    <PackageReference Include="Microsoft.Agents.AI.Foundry.Hosting" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+    <!-- Added due to security vulnerabilities: https://github.com/advisories/GHSA-g94r-2vxg-569j -->
+    <PackageReference Include="OpenTelemetry.Api" />
+    <!-- Added due to security vulnerabilities: https://github.com/advisories/GHSA-mr8r-92fq-pj8p -->
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
   </ItemGroup>
 
 </Project>

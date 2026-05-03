@@ -4,22 +4,26 @@ pushd $REPOSITORY_ROOT/resources-foundry
 
 $tenantId = azd env get-value AZURE_TENANT_ID
 
-$foundryName = azd env get-value FOUNDRY_NAME
-$foundryProjectName = azd env get-value FOUNDRY_PROJECT_NAME
 $foundryResourceGroup = "rg-$(azd env get-value AZURE_ENV_NAME)"
+$foundryName = azd env get-value AZURE_AI_ACCOUNT_NAME
+$foundryProjectName = azd env get-value AZURE_AI_PROJECT_NAME
+$foundryProjectEndpoint = azd env get-value AZURE_AI_PROJECT_ENDPOINT
+$foundryModelDeploymentName = azd env get-value AZURE_AI_MODEL_DEPLOYMENT_NAME
 
-$mcpTodoFqdn = azd env get-value AZURE_RESOURCE_MCP_TODO_FQDN
-$projectEndpoint = azd env get-value FOUNDRY_PROJECT_ENDPOINT
+$todoAgentName = azd env get-value AGENT_TODO_AGENT_NAME
+$todoAgentVersion = azd env get-value AGENT_TODO_AGENT_VERSION
+$todoAgentEndpoint = azd env get-value AGENT_TODO_AGENT_RESPONSES_ENDPOINT
 
-dotnet user-secrets --file "$REPOSITORY_ROOT/src/MafStarterPack.PromptAgent/create-agent.cs" set "AZURE_TENANT_ID" $tenantId
+dotnet user-secrets --project "$REPOSITORY_ROOT/src/MafStarterPack.AppHost" set "AZURE_TENANT_ID" $tenantId
 
-dotnet user-secrets --file "$REPOSITORY_ROOT/src/MafStarterPack.PromptAgent/create-agent.cs" set "FOUNDRY_NAME" $foundryName
-dotnet user-secrets --file "$REPOSITORY_ROOT/src/MafStarterPack.PromptAgent/create-agent.cs" set "FOUNDRY_PROJECT_NAME" $foundryProjectName
-dotnet user-secrets --file "$REPOSITORY_ROOT/src/MafStarterPack.PromptAgent/create-agent.cs" set "FOUNDRY_RESOURCE_GROUP" $foundryResourceGroup
+dotnet user-secrets --project "$REPOSITORY_ROOT/src/MafStarterPack.AppHost" set "FOUNDRY_RESOURCE_GROUP" $foundryResourceGroup
+dotnet user-secrets --project "$REPOSITORY_ROOT/src/MafStarterPack.AppHost" set "FOUNDRY_NAME" $foundryName
+dotnet user-secrets --project "$REPOSITORY_ROOT/src/MafStarterPack.AppHost" set "FOUNDRY_PROJECT_NAME" $foundryProjectName
+dotnet user-secrets --project "$REPOSITORY_ROOT/src/MafStarterPack.AppHost" set "FOUNDRY_PROJECT_ENDPOINT" $foundryProjectEndpoint
+dotnet user-secrets --project "$REPOSITORY_ROOT/src/MafStarterPack.AppHost" set "FOUNDRY_MODEL_DEPLOYMENT_NAME" $foundryModelDeploymentName
 
-dotnet user-secrets --file "$REPOSITORY_ROOT/src/MafStarterPack.PromptAgent/create-agent.cs" set "AZURE_RESOURCE_MCP_TODO_FQDN" $mcpTodoFqdn
-dotnet user-secrets --file "$REPOSITORY_ROOT/src/MafStarterPack.PromptAgent/create-agent.cs" set "Foundry:Project:Endpoint" $projectEndpoint
-
-dotnet run --file "$REPOSITORY_ROOT/src/MafStarterPack.PromptAgent/create-agent.cs"
+dotnet user-secrets --project "$REPOSITORY_ROOT/src/MafStarterPack.AppHost" set "TODO_AGENT_NAME" $todoAgentName
+dotnet user-secrets --project "$REPOSITORY_ROOT/src/MafStarterPack.AppHost" set "TODO_AGENT_VERSION" $todoAgentVersion
+dotnet user-secrets --project "$REPOSITORY_ROOT/src/MafStarterPack.AppHost" set "TODO_AGENT_ENDPOINT" $todoAgentEndpoint
 
 popd

@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: mcp-todo-server
+
+metadata:
+  template: mcp-todo-server@1.0.0
+  author: Justin Yoo
+  description: Provision MCP To-do server using Azure Developer CLI
+
+services:
+  mcp-todo:
+    project: ../src/MafStarterPack.McpTodo
+    host: containerapp
+    language: dotnet
+    docker:
+      path: ./Dockerfile
+      context: .
+      remoteBuild: true
+
+hooks:
+  predeploy:
+    posix:
+      shell: sh
+      run: ./scripts/pre-deploy.sh
+      interactive: false
+    windows:
+      shell: pwsh
+      run: ./scripts/pre-deploy.ps1
+      interactive: false
+
+  postdeploy:
+    posix:
+      shell: sh
+      run: ./scripts/post-deploy.sh
+      interactive: false
+    windows:
+      shell: pwsh
+      run: ./scripts/post-deploy.ps1
+      interactive: false

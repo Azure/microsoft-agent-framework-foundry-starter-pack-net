@@ -1,14 +1,10 @@
 using Azure.AI.Extensions.OpenAI;
-using Azure.AI.Projects;
 using Azure.Identity;
 
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.DevUI;
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
-using Microsoft.Agents.AI.Workflows;
 using Microsoft.Extensions.AI;
-
-using OpenAI.Chat;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,19 +27,19 @@ if (builder.Environment.IsDevelopment() == true)
 
 builder.AddServiceDefaults();
 
-// Foundry Agent Client
-// NOTE: projectClient.AsAIAgent() crashes due to Azure.AI.Projects.Agents 2.0.0
-// renaming AgentRecord → ProjectsAgentRecord, while Microsoft.Agents.AI.AzureAI
-// 1.0.0-rc5 still references the old type name in GetService().
-// Workaround: use clientFactory to wrap the inner client and intercept GetService.
 var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions() { TenantId = config["AZURE_TENANT_ID"] });
-var projectClient = new AIProjectClient(endpoint: new Uri(endpoint), tokenProvider: credential);
-var agentReference = new AgentReference(agentName, agentVersion);
+var projectClientOptions = new ProjectOpenAIClientOptions { AgentName = agentName };
+var projectClient = new ProjectOpenAIClient(
+    projectEndpoint: new Uri(endpoint),
+    tokenProvider: credential,
+    options: projectClientOptions);
 
-var agent = projectClient.AsAIAgent(
-    agentReference: agentReference,
-    clientFactory: inner => new AgentRecordShimChatClient(inner)
-);
+var chatClient = projectClient.GetResponsesClient()
+                              .AsIChatClient(model);
+var agentOptions = new ChatClientAgentOptions { Name = agentName };
+var agent = new ChatClientAgent(
+    chatClient: chatClient,
+    options: agentOptions);
 
 builder.Services.AddKeyedSingleton<AIAgent>(agentName, agent);
 
@@ -74,22 +70,3 @@ else
 }
 
 app.Run();
-
-/// <summary>
-/// Wraps an IChatClient to intercept GetService calls that would trigger loading
-/// the missing AgentRecord type, preventing a TypeLoadException.
-/// </summary>
-internal sealed class AgentRecordShimChatClient(IChatClient inner) : DelegatingChatClient(inner)
-{
-    public override object? GetService(Type serviceType, object? serviceKey = null)
-    {
-        try
-        {
-            return base.GetService(serviceType, serviceKey);
-        }
-        catch (TypeLoadException)
-        {
-            return null;
-        }
-    }
-}

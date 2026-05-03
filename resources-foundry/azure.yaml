@@ -1,23 +1,64 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 
-name: microsoft-foundry-prompt-agent-net
+requiredVersions:
+  extensions:
+    azure.ai.agents: '>=0.1.0-preview'
+
+name: microsoft-foundry-hosted-todo-agent
 
 metadata:
-  template: microsoft-foundry-prompt-agent-net@1.0.0
+  template: microsoft-foundry-hosted-todo-agent@1.0.0
   author: Justin Yoo
-  description: Provision Microsoft Foundry Agent and MCP server using Azure Developer CLI
+  description: Provision Microsoft Foundry Hosted Agent using Azure Developer CLI
+
+infra:
+  provider: bicep
+  path: ./infra
 
 services:
-  mcp-todo:
-    project: ../src/MafStarterPack.McpTodo
-    host: containerapp
-    language: dotnet
+  todo-agent:
+    project: src/todo-agent
+    host: azure.ai.agent
+    language: docker
     docker:
-      path: ./Dockerfile
-      context: .
       remoteBuild: true
+    config:
+      container:
+        resources:
+          cpu: "0.25"
+          memory: 0.5Gi
+      deployments:
+        - model:
+            format: OpenAI
+            name: gpt-5-mini
+            version: "2025-08-07"
+          name: gpt-5-mini
+          sku:
+            capacity: 10
+            name: GlobalStandard
+      startupCommand: dotnet run
 
 hooks:
+  preup:
+    posix:
+      shell: sh
+      run: ./scripts/pre-provision.sh
+      interactive: false
+    windows:
+      shell: pwsh
+      run: ./scripts/pre-provision.ps1
+      interactive: false
+
+  preprovision:
+    posix:
+      shell: sh
+      run: ./scripts/pre-provision.sh
+      interactive: false
+    windows:
+      shell: pwsh
+      run: ./scripts/pre-provision.ps1
+      interactive: false
+
   postdeploy:
     posix:
       shell: sh
