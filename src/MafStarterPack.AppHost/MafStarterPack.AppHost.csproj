@@ -7,8 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Foundry" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MafStarterPack.Agent\MafStarterPack.Agent.csproj" />
     <ProjectReference Include="..\MafStarterPack.WebUI\MafStarterPack.WebUI.csproj" />
+    <ProjectReference Include="..\MafStarterPack.HostedAgent\MafStarterPack.HostedAgent.csproj" />
+    <ProjectReference Include="..\MafStarterPack.McpTodo\MafStarterPack.McpTodo.csproj" />
   </ItemGroup>
 
 </Project>
