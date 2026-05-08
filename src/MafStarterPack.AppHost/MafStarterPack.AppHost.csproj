@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.2.4">
+<Project Sdk="Aspire.AppHost.Sdk/13.3.0">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -7,7 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Foundry" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MafStarterPack.Agent\MafStarterPack.Agent.csproj" />
+    <ProjectReference Include="..\MafStarterPack.HostedAgent\MafStarterPack.HostedAgent.csproj" />
+    <ProjectReference Include="..\MafStarterPack.McpTodo\MafStarterPack.McpTodo.csproj" />
     <ProjectReference Include="..\MafStarterPack.WebUI\MafStarterPack.WebUI.csproj" />
   </ItemGroup>
 

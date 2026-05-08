@@ -69,4 +69,4 @@ else
     app.UseHttpsRedirection();
 }
 
-app.Run();
+await app.RunAsync();
