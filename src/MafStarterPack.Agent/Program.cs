@@ -1,6 +1,8 @@
 using Azure.AI.Extensions.OpenAI;
 using Azure.Identity;
 
+using MafStarterPack.Agent.Extensions;
+
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.DevUI;
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
@@ -10,17 +12,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 var config = builder.Configuration;
 
-var endpoint = config["Foundry:Project:Endpoint"] ?? throw new InvalidOperationException("Missing Foundry Endpoint");
-var model = config["Foundry:Project:Model"] ?? throw new InvalidOperationException("Missing Foundry Model");
-var agentName = config["Foundry:Project:Agent:Name"] ?? "todo-agent";
-var agentVersion = config["Foundry:Project:Agent:Version"] ?? "1";
+var (endpoint, deploymentName, agentName, agentVersion) = config.GetAgentDetails("foundry");
+// var endpoint = config["Foundry:Project:Endpoint"] ?? throw new InvalidOperationException("Missing Foundry Endpoint");
+// var model = config["Foundry:Project:Model"] ?? throw new InvalidOperationException("Missing Foundry Model");
+// var agentName = config["Foundry:Project:Agent:Name"] ?? "todo-agent";
+// var agentVersion = config["Foundry:Project:Agent:Version"] ?? "1";
 
 if (builder.Environment.IsDevelopment() == true)
 {
     var logger = new LoggerFactory().CreateLogger("MafStarterPack.Agent.Program");
     logger.LogInformation("Using configuration: {config}", config.GetDebugView());
     logger.LogInformation("Parsed connection string values: Endpoint={endpoint}", endpoint);
-    logger.LogInformation("Parsed connection string values: Model={model}", model);
+    logger.LogInformation("Parsed connection string values: DeploymentName={deploymentName}", deploymentName);
     logger.LogInformation("Parsed connection string values: AgentName={agentName}", agentName);
     logger.LogInformation("Parsed connection string values: AgentVersion={agentVersion}", agentVersion);
 }
@@ -30,12 +33,12 @@ builder.AddServiceDefaults();
 var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions() { TenantId = config["AZURE_TENANT_ID"] });
 var projectClientOptions = new ProjectOpenAIClientOptions { AgentName = agentName };
 var projectClient = new ProjectOpenAIClient(
-    projectEndpoint: new Uri(endpoint),
+    projectEndpoint: new Uri(endpoint!),
     tokenProvider: credential,
     options: projectClientOptions);
 
 var chatClient = projectClient.GetResponsesClient()
-                              .AsIChatClient(model);
+                              .AsIChatClient(deploymentName);
 var agentOptions = new ChatClientAgentOptions { Name = agentName };
 var agent = new ChatClientAgent(
     chatClient: chatClient,
@@ -69,4 +72,4 @@ else
     app.UseHttpsRedirection();
 }
 
-app.Run();
+await app.RunAsync();

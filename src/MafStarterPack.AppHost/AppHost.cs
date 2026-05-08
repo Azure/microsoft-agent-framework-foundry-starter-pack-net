@@ -91,9 +91,18 @@ internal static class FoundryResourceExtensions
     {
         var resource = foundry.Resource;
 
+        var reb = new ReferenceExpressionBuilder();
+        reb.Append($"Endpoint={resource.ProjectEndpoint}");
+        reb.Append($";Deployment={resource.Model}");
+        reb.Append($";AgentName={resource.AgentName}");
+        reb.Append($";AgentVersion={resource.AgentVersion}");
+
+        var connectionString = builder.ApplicationBuilder.AddConnectionString(resource.Name, reb.Build());
+
         return builder.WithEnvironment("Foundry__Project__Endpoint", resource.ProjectEndpoint ?? "")
                       .WithEnvironment("Foundry__Project__Model", resource.Model ?? "")
                       .WithEnvironment("Foundry__Project__Agent__Name", resource.AgentName ?? "")
-                      .WithEnvironment("Foundry__Project__Agent__Version", resource.AgentVersion ?? "");
+                      .WithEnvironment("Foundry__Project__Agent__Version", resource.AgentVersion ?? "")
+                      .WithReference(connectionString);
     }
 }
