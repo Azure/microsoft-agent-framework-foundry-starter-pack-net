@@ -5,7 +5,10 @@ using MafStarterPack.HostedAgent.Extensions;
 
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Foundry.Hosting;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -13,20 +16,27 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
-var builder = AgentHost.CreateBuilder(args);
+// var builder = AgentHost.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
 Console.WriteLine("Starting Hosted Agent...");
 
 var config = builder.Configuration;
 
-var (projectEndpoint, deploymentName) = config.GetFoundryConnectionDetails("starter-project", "gpt-5-mini");
+var (projectEndpoint, deploymentName) = config.GetFoundryConnectionDetails(projectName: "starter-project", modelName: "gpt-5-mini");
 var tenantId = config["AZURE_TENANT_ID"] ?? throw new InvalidOperationException("AZURE_TENANT_ID environment variable is not set.");
 
-Console.WriteLine($"Using Azure OpenAI Endpoint: {projectEndpoint}");
-Console.WriteLine($"Using Azure OpenAI Deployment Name: {deploymentName}");
-Console.WriteLine($"Using Azure Tenant ID: {tenantId}");
+if (builder.Environment.IsDevelopment() == true)
+{
+    var logger = new LoggerFactory().CreateLogger("MafStarterPack.HostedAgent.Program");
+    logger.LogInformation("Using configuration: {config}", config.GetDebugView());
+    logger.LogInformation("Parsed connection string values: Endpoint={endpoint}", projectEndpoint);
+    logger.LogInformation("Parsed connection string values: Model={model}", deploymentName);
+    logger.LogInformation("Parsed connection string values: Tenant ID={tenantId}", tenantId);
+}
 
-builder.WebApplicationBuilder.AddServiceDefaults();
+// builder.WebApplicationBuilder.AddServiceDefaults();
+builder.AddServiceDefaults();
 
 builder.Services.AddHttpClient("mcp-todo", client =>
 {
@@ -38,7 +48,8 @@ builder.Services.AddKeyedSingleton<McpClient>("mcp-todo", (sp, obj) =>
     var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
     var httpClient = sp.GetRequiredService<IHttpClientFactory>()
                        .CreateClient("mcp-todo");
-    var endpoint = builder.WebApplicationBuilder.Environment.IsDevelopment() == true
+    // var endpoint = builder.WebApplicationBuilder.Environment.IsDevelopment() == true
+    var endpoint = builder.Environment.IsDevelopment() == true
                  ? $"{httpClient.BaseAddress!.ToString().Replace("https+", string.Empty).TrimEnd('/')}"
                  : $"{httpClient.BaseAddress!.ToString().Replace("+http", string.Empty).TrimEnd('/')}";
 
@@ -79,10 +90,15 @@ AIAgent agent = new AIProjectClient(new Uri(projectEndpoint!), credential)
                         tools: [.. tools.Select(tool => (AITool)tool) ]);
 
 builder.Services.AddFoundryResponses(agent);
-builder.RegisterProtocol("responses", endpoints => endpoints.MapFoundryResponses());
+// builder.RegisterProtocol("responses", endpoints => endpoints.MapFoundryResponses());
 
 var app = builder.Build();
 
-app.App.MapDefaultEndpoints();
+// app.App.MapDefaultEndpoints();
+app.MapDefaultEndpoints();
+
+app.MapFoundryResponses();
+app.MapGet("/liveness", () => Results.Ok("Healthy"));
+app.MapGet("/readiness", () => Results.Ok("Ready"));
 
 await app.RunAsync();
