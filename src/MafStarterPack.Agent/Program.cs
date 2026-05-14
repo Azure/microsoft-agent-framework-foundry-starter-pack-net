@@ -49,6 +49,11 @@ builder.Services.AddKeyedSingleton<AIAgent>(agentName, agent);
 builder.Services.AddOpenAIResponses();
 builder.Services.AddOpenAIConversations();
 
+if (builder.Environment.IsDevelopment() == true)
+{
+    builder.Services.AddDevUI();
+}
+
 builder.Services.AddAGUI();
 
 var app = builder.Build();
